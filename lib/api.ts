@@ -15,6 +15,7 @@ import type {
   AssistantUndoResult,
   AssistantHistoryPage,
   IntegrationsStatus,
+  AgendaResponse,
 } from "./types";
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8080";
@@ -343,6 +344,15 @@ export async function getAssistantHistory(options?: { limit?: number; before?: s
   const qs = params.toString();
   const data = await request<AssistantHistoryPage>(`/api/assistant/history${qs ? `?${qs}` : ""}`);
   return { items: data.items ?? [], next_before: data.next_before ?? null };
+}
+
+// ──────────────────────────────────────────────
+// Agenda (นัด/เตือนที่กำลังจะมาถึง)
+// ──────────────────────────────────────────────
+
+export async function getAgenda(days = 14): Promise<AgendaResponse> {
+  const data = await request<AgendaResponse>(`/api/agenda?days=${days}`);
+  return { ...data, items: data.items ?? [] };
 }
 
 // ──────────────────────────────────────────────

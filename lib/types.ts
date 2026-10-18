@@ -81,6 +81,25 @@ export type AssistantUndoResult = {
   deleted_events?: number;
 };
 
+// นัด/เตือนที่กำลังจะมาถึง รวม Google Calendar — GET /api/agenda
+export type AgendaItem = {
+  kind: "reminder" | "due" | "event";
+  id: string;
+  title: string;
+  start: string;
+  end?: string;
+  all_day?: boolean;
+  done?: boolean;
+  link?: string;
+};
+export type AgendaResponse = {
+  items: AgendaItem[];
+  from: string;
+  to: string;
+  calendar_connected: boolean;
+  calendar_error?: boolean;
+};
+
 // สถานะการเชื่อมบริการภายนอก — GET /api/integrations
 export type IntegrationsStatus = {
   google_calendar: {
