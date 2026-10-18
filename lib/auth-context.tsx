@@ -71,7 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const res = await apiLoginWithEmail(email, password);
       setUser(res.user);
       setIdentities(res.identities || []);
-      router.push("/notes");
+      router.push("/chat");
     } finally {
       setIsLoading(false);
     }
@@ -83,7 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const res = await apiRegisterWithEmail(email, password, displayName);
       setUser(res.user);
       setIdentities(res.identities || []);
-      router.push("/notes");
+      router.push("/chat");
     } finally {
       setIsLoading(false);
     }
@@ -95,7 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const res = await apiLoginWithGoogle(credential);
       setUser(res.user);
       setIdentities(res.identities || []);
-      router.push("/notes");
+      router.push("/chat");
     } finally {
       setIsLoading(false);
     }
@@ -107,7 +107,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const res = await apiLoginWithLine(idToken);
       setUser(res.user);
       setIdentities(res.identities || []);
-      router.push("/notes");
+      router.push("/chat");
     } finally {
       setIsLoading(false);
     }

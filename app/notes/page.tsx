@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { useLanguage } from "@/lib/language-context";
 import { Navbar } from "@/components/Navbar";
@@ -10,7 +11,6 @@ import type { Profile, Note } from "@/lib/types";
 import { UserCard } from "@/components/UserCard";
 import NoteCard from "@/components/NoteCard";
 import { NoteForm } from "@/components/ui/noteform";
-import { AssistantBox } from "@/components/AssistantBox";
 import { toast } from "@/components/ui/toast";
 import { Input } from "@/components/ui/input";
 import ToggleBar from "@/components/ToggleBar";
@@ -30,6 +30,7 @@ export default function NotesPage() {
   const [type, setType] = useState<"note" | "checklist" | "all">("all");
   const [search, setSearch] = useState("");
   const [noteCount, setNoteCount] = useState(0);
+  const [showForm, setShowForm] = useState(false);
 
   // Modals
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -112,19 +113,6 @@ export default function NotesPage() {
     };
   }, [type, search, isAuthenticated, isLoadingMain]);
 
-  // โหลดรายการใหม่หลัง AI สร้าง/แก้/ยกเลิกข้อมูล (AI อาจเพิ่มเข้าลิสต์เดิม จึงต้องโหลดใหม่ทั้งหมด)
-  const refreshNotes = async () => {
-    try {
-      const [feed, count] = await Promise.all([
-        getFeed({ type, q: search }),
-        getNoteCount().catch(() => noteCount),
-      ]);
-      setNotes(feed.notes);
-      setNoteCount(count);
-    } catch (err) {
-      console.error("Refresh notes error:", err);
-    }
-  };
 
   const handleCreateNote = async (content: string, items?: string[]) => {
     try {
@@ -260,6 +248,11 @@ export default function NotesPage() {
       <Navbar />
 
       <main className="mx-auto max-w-2xl px-4 py-6 sm:px-6">
+        <div className="mb-5">
+          <h1 className="text-xl font-bold text-[#26343F]">{t("notes_page_title")}</h1>
+          <p className="mt-1 text-sm text-[#66737D]">{t("notes_page_sub")}</p>
+        </div>
+
         {/* User Stats Card */}
         {profile && (
           <div className="mb-6">
@@ -267,21 +260,47 @@ export default function NotesPage() {
           </div>
         )}
 
-        {/* AI Assistant: ใช้ AI ตัวเดียวกับ LINE bot โดยไม่ต้องผ่าน LINE */}
-        <AssistantBox onChanged={refreshNotes} />
+        {/* ทางหลักคือบอกผู้ช่วยที่หน้าแชท หน้านี้ไว้ตรวจและแก้สิ่งที่จดไว้ */}
+        <div className="mb-4 flex items-center gap-3 rounded-2xl bg-[#3D5A73] px-4 py-3 text-white shadow-xs">
+          <Sparkles className="h-4 w-4 shrink-0 text-[#D8B968]" />
+          <p className="flex-1 text-sm">{t("notes_ask_banner")}</p>
+          <Link href="/chat" className="shrink-0 rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold hover:bg-white/25 transition-colors">
+            {t("notes_ask_open")}
+          </Link>
+        </div>
 
-        {/* Note Creation Form */}
-        <section className="mb-6 rounded-2xl border border-[#D1CEC5] bg-[#FAF9F6] p-4 sm:p-5 shadow-xs">
-          <div className="flex items-center justify-between mb-3 pb-2 border-b border-[#D1CEC5]/50">
-            <h2 className="text-sm font-bold text-[#3D5A73] flex items-center gap-1.5">
-              <PenLine className="h-4 w-4" /> {t("notes_new_title")}
-            </h2>
-            <span className="text-[11px] text-[#66737D] flex items-center gap-1">
-              <Sparkles className="h-3 w-3 text-[#D8B968]" /> {t("notes_sync_line")}
-            </span>
-          </div>
-          <NoteForm onSubmit={handleCreateNote} />
-        </section>
+        {/* ฟอร์มจดเอง: พับไว้ เปิดเมื่ออยากจดโดยไม่ผ่านผู้ช่วย */}
+        {showForm ? (
+          <section className="mb-6 rounded-2xl border border-[#D1CEC5] bg-[#FAF9F6] p-4 sm:p-5 shadow-xs">
+            <div className="flex items-center justify-between mb-3 pb-2 border-b border-[#D1CEC5]/50">
+              <h2 className="text-sm font-bold text-[#3D5A73] flex items-center gap-1.5">
+                <PenLine className="h-4 w-4" /> {t("notes_new_title")}
+              </h2>
+              <button
+                type="button"
+                onClick={() => setShowForm(false)}
+                aria-label={t("common_close")}
+                className="rounded-full p-1 text-[#66737D] hover:bg-[#E6E3DC]/60 cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <NoteForm
+              onSubmit={async (content, items) => {
+                await handleCreateNote(content, items);
+                setShowForm(false);
+              }}
+            />
+          </section>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowForm(true)}
+            className="mb-6 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-[#66737D] hover:bg-[#E6E3DC]/60 hover:text-[#26343F] cursor-pointer transition-colors"
+          >
+            <Plus className="h-3.5 w-3.5" /> {t("notes_write_myself")}
+          </button>
+        )}
 
         {/* Search & Type Filters */}
         <div className="mb-5 space-y-3">

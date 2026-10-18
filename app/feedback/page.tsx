@@ -250,7 +250,7 @@ export default function FeedbackPage() {
         {/* Navigation Breadcrumb */}
         <div className="mb-6 flex items-center justify-between">
           <Link
-            href="/notes"
+            href="/chat"
             className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-[#66737D] hover:text-[#3D5A73] transition-colors group"
           >
             <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />

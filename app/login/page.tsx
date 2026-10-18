@@ -33,7 +33,7 @@ export default function LoginPage({ defaultTab = "login" }: LoginPageProps = {})
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      router.push("/notes");
+      router.push("/chat");
     }
   }, [isAuthenticated, isLoading, router]);
 

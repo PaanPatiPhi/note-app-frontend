@@ -7,8 +7,8 @@ import "./globals.css";
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "dummy-client-id.apps.googleusercontent.com";
 
 export const metadata = {
-  title: "JodJod - สมุดบันทึกส่วนตัว",
-  description: "จดทุกอย่างได้ง่ายๆ เข้าถึงได้จากทุกที่ ทั้ง Web และ LINE",
+  title: "จดจด — พี่จ๊อด เลขาส่วนตัวในแชท",
+  description: "พิมพ์บอกพี่จ๊อดใน LINE หรือบนเว็บ แล้วพี่จ๊อดจะจด ทำลิสต์ ตั้งเตือน และลงนัดใน Google Calendar ให้",
 };
 
 export default function RootLayout({
