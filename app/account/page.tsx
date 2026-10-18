@@ -7,6 +7,7 @@ import { useGoogleLogin } from "@react-oauth/google";
 import { useAuth } from "@/lib/auth-context";
 import { useLanguage } from "@/lib/language-context";
 import { Navbar } from "@/components/Navbar";
+import { CalendarConnectCard } from "@/components/CalendarConnectCard";
 import Loading from "@/components/Loading";
 import { toast } from "@/components/ui/toast";
 import { getAvatarUrl } from "@/lib/api";
@@ -654,6 +655,9 @@ export default function AccountPage() {
             </div>
           </div>
         </section>
+
+        {/* Section 3: Connected services (Google Calendar) */}
+        <CalendarConnectCard />
 
         {/* Subscription & Plans Section */}
         <section className="rounded-2xl border border-[#D1CEC5] bg-white p-5 sm:p-6 shadow-xs mb-6">

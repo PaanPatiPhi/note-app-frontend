@@ -78,6 +78,17 @@ export type AssistantUndoResult = {
   deleted_notes: number;
   removed_items: number;
   restored_items: number;
+  deleted_events?: number;
+};
+
+// สถานะการเชื่อมบริการภายนอก — GET /api/integrations
+export type IntegrationsStatus = {
+  google_calendar: {
+    // false = server ยังไม่ได้ตั้งค่า Google OAuth
+    available: boolean;
+    connected: boolean;
+    email?: string;
+  };
 };
 
 // ข้อความที่เคยสั่ง AI (จาก LINE หรือเว็บ) — GET /api/assistant/history

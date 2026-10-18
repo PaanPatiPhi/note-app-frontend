@@ -14,6 +14,7 @@ import type {
   AssistantReply,
   AssistantUndoResult,
   AssistantHistoryPage,
+  IntegrationsStatus,
 } from "./types";
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8080";
@@ -342,6 +343,24 @@ export async function getAssistantHistory(options?: { limit?: number; before?: s
   const qs = params.toString();
   const data = await request<AssistantHistoryPage>(`/api/assistant/history${qs ? `?${qs}` : ""}`);
   return { items: data.items ?? [], next_before: data.next_before ?? null };
+}
+
+// ──────────────────────────────────────────────
+// Integrations (Google Calendar ฯลฯ)
+// ──────────────────────────────────────────────
+
+export async function getIntegrations(): Promise<IntegrationsStatus> {
+  return await request<IntegrationsStatus>("/api/integrations");
+}
+
+// คืน URL หน้าขออนุญาตของ Google — ให้ไปหน้านั้นต่อ แล้ว Google จะพากลับมาที่ /account?google_calendar=...
+export async function startGoogleCalendarConnect(): Promise<string> {
+  const data = await request<{ url: string }>("/api/integrations/google/connect", { method: "POST" });
+  return data.url;
+}
+
+export async function disconnectGoogleCalendar(): Promise<void> {
+  await request<void>("/api/integrations/google", { method: "DELETE" });
 }
 
 // ──────────────────────────────────────────────
