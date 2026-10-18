@@ -67,6 +67,8 @@ export const translations = {
 
     // NoteCard
     notecard_type_note: "โน้ต",
+    notecard_type_reminder: "เตือน",
+    notecard_remind_at: "เตือน",
     notecard_type_checklist: "เช็คลิสต์",
     notecard_type_todo: "ต้องทำ",
     notecard_all_done: "เสร็จสิ้นครบทุกรายการแล้ว",
@@ -77,6 +79,17 @@ export const translations = {
     // Notes Page
     notes_new_title: "จดโน้ตใหม่",
     notes_sync_line: "ซิงค์กับ LINE อัตโนมัติ",
+
+    // AI Assistant
+    assistant_title: "บอก JodJod",
+    assistant_subtitle: "พิมพ์เหมือนแชทใน LINE เดี๋ยว AI จดให้",
+    assistant_placeholder: "เช่น ซื้อนม ไข่ ขนมปัง หรือ พรุ่งนี้ 9 โมงเตือนโทรหาหมอ",
+    assistant_send: "ส่ง",
+    assistant_thinking: "JodJod กำลังจด...",
+    assistant_undo: "ยกเลิก",
+    assistant_undone: "ยกเลิกแล้ว",
+    assistant_unavailable: "ตอนนี้ AI ไม่พร้อมใช้งาน ลองใหม่อีกครั้ง หรือใช้ช่องจดโน้ตด้านล่างแทน",
+    assistant_undo_failed: "ยกเลิกไม่สำเร็จ ลองอีกครั้ง",
     notes_search_placeholder: "ค้นหาที่จดจดไว้...",
     notes_searching: "กำลังค้นหาบันทึก...",
     notes_empty_title: "ยังไม่มีบันทึกในหน้านี้",
@@ -489,6 +502,8 @@ export const translations = {
 
     // NoteCard
     notecard_type_note: "JodJod Note",
+    notecard_type_reminder: "Reminder",
+    notecard_remind_at: "Remind at",
     notecard_type_checklist: "Checklist",
     notecard_type_todo: "To-Do",
     notecard_all_done: "All items completed!",
@@ -499,6 +514,17 @@ export const translations = {
     // Notes Page
     notes_new_title: "JodJod a New Note",
     notes_sync_line: "Auto-synced with LINE",
+
+    // AI Assistant
+    assistant_title: "Ask JodJod",
+    assistant_subtitle: "Type it like a LINE chat and the AI files it for you",
+    assistant_placeholder: "e.g. buy milk, eggs, bread or remind me to call the doctor tomorrow at 9",
+    assistant_send: "Send",
+    assistant_thinking: "JodJod is noting it down...",
+    assistant_undo: "Undo",
+    assistant_undone: "Undone",
+    assistant_unavailable: "The AI is not available right now. Try again, or use the note form below.",
+    assistant_undo_failed: "Could not undo. Please try again.",
     notes_search_placeholder: "Search your JodJods...",
     notes_searching: "Searching your JodJods...",
     notes_empty_title: "No JodJods here yet",

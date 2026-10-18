@@ -44,7 +44,7 @@ export type NoteItemType = {
   is_done: boolean;
 };
 
-export type NoteKind = "note" | "todo" | "checklist";
+export type NoteKind = "note" | "todo" | "checklist" | "reminder";
 
 // ใช้กับ toggle บนหน้าเว็บ: "all" = ไม่กรอง type เลย
 export type NoteKindFilter = "all" | NoteKind;
@@ -56,6 +56,28 @@ export type Note = {
   is_done: boolean;
   created_at: string;
   items?: NoteItemType[];
+  due_date?: string | null;
+  // เวลาที่จะเตือน (เฉพาะ type "reminder")
+  remind_at?: string | null;
+  // ช่องทางที่สร้าง: "line" | "web" | "ai"
+  source?: string;
+};
+
+// ผลจาก AI assistant (POST /api/assistant/messages)
+export type AssistantReply = {
+  reply: string;
+  action_id?: string;
+  // กดยกเลิกได้ (AI สร้าง/แก้ข้อมูล)
+  undoable: boolean;
+  // มีข้อมูลเปลี่ยน ให้โหลดรายการโน้ตใหม่
+  wrote: boolean;
+};
+
+export type AssistantUndoResult = {
+  message: string;
+  deleted_notes: number;
+  removed_items: number;
+  restored_items: number;
 };
 
 export type FeedbackType = "complaint" | "suggestion" | "bug" | "other";

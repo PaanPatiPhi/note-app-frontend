@@ -11,6 +11,8 @@ import type {
   AdminStats,
   UserTier,
   UserRole,
+  AssistantReply,
+  AssistantUndoResult,
 } from "./types";
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8080";
@@ -307,6 +309,27 @@ export async function toggleItem(
   await request<void>(`/api/notes/${noteId}/items/${itemId}`, {
     method: "PATCH",
     body: JSON.stringify({ is_done: isDone }),
+  });
+}
+
+// ──────────────────────────────────────────────
+// AI Assistant APIs (ใช้ AI ตัวเดียวกับ LINE bot ผ่านเว็บ/แอป)
+// ──────────────────────────────────────────────
+
+// ส่งข้อความภาษาธรรมชาติ เช่น "ซื้อนม ไข่ ขนมปัง" หรือ "พรุ่งนี้ 9 โมงเตือนโทรหาหมอ"
+// ถ้า AI ใช้ไม่ได้ (503) จะ throw ApiError ที่ data.reply มีข้อความสุภาพไว้แสดง
+export async function sendAssistantMessage(text: string): Promise<AssistantReply> {
+  return await request<AssistantReply>("/api/assistant/messages", {
+    method: "POST",
+    body: JSON.stringify({ text }),
+  });
+}
+
+// ย้อนสิ่งที่ AI ทำใน action นั้น (ภายใน 24 ชม., ครั้งเดียว)
+// 404 = ไม่พบ, 409 = ยกเลิกไปแล้วหรือเก่าเกิน — ทั้งสองกรณี data.message มีข้อความให้แสดง
+export async function undoAssistantAction(actionId: string): Promise<AssistantUndoResult> {
+  return await request<AssistantUndoResult>(`/api/assistant/actions/${encodeURIComponent(actionId)}/undo`, {
+    method: "POST",
   });
 }
 

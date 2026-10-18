@@ -10,6 +10,7 @@ import type { Profile, Note } from "@/lib/types";
 import { UserCard } from "@/components/UserCard";
 import NoteCard from "@/components/NoteCard";
 import { NoteForm } from "@/components/ui/noteform";
+import { AssistantBox } from "@/components/AssistantBox";
 import { toast } from "@/components/ui/toast";
 import { Input } from "@/components/ui/input";
 import ToggleBar from "@/components/ToggleBar";
@@ -110,6 +111,20 @@ export default function NotesPage() {
       clearTimeout(timer);
     };
   }, [type, search, isAuthenticated, isLoadingMain]);
+
+  // โหลดรายการใหม่หลัง AI สร้าง/แก้/ยกเลิกข้อมูล (AI อาจเพิ่มเข้าลิสต์เดิม จึงต้องโหลดใหม่ทั้งหมด)
+  const refreshNotes = async () => {
+    try {
+      const [feed, count] = await Promise.all([
+        getFeed({ type, q: search }),
+        getNoteCount().catch(() => noteCount),
+      ]);
+      setNotes(feed.notes);
+      setNoteCount(count);
+    } catch (err) {
+      console.error("Refresh notes error:", err);
+    }
+  };
 
   const handleCreateNote = async (content: string, items?: string[]) => {
     try {
@@ -251,6 +266,9 @@ export default function NotesPage() {
             <UserCard profile={profile} count={noteCount} />
           </div>
         )}
+
+        {/* AI Assistant: ใช้ AI ตัวเดียวกับ LINE bot โดยไม่ต้องผ่าน LINE */}
+        <AssistantBox onChanged={refreshNotes} />
 
         {/* Note Creation Form */}
         <section className="mb-6 rounded-2xl border border-[#D1CEC5] bg-[#FAF9F6] p-4 sm:p-5 shadow-xs">

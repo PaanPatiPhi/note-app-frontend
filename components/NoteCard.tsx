@@ -5,7 +5,7 @@ import type { Note, NoteKind } from "@/lib/types";
 import { useLanguage } from "@/lib/language-context";
 import { DropdownButton } from "./ui/dropdownbutton";
 import { toggleItem } from "@/lib/api";
-import { Check, Clock, CheckSquare, FileText, ListTodo } from "lucide-react";
+import { BellRing, Check, Clock, CheckSquare, FileText, ListTodo } from "lucide-react";
 
 function formatFormattedDate(isoString: string, lang: "th" | "en"): string {
   try {
@@ -88,6 +88,11 @@ export default function NoteCard({ note, onEdit, onDelete }: NoteCardProps) {
       icon: FileText,
       badgeClass: "bg-[#26343F]/10 text-[#26343F] border-[#26343F]/20",
     },
+    reminder: {
+      label: t("notecard_type_reminder"),
+      icon: BellRing,
+      badgeClass: "bg-[#A34F45]/10 text-[#A34F45] border-[#A34F45]/30",
+    },
   };
 
   const typeInfo = typeConfig[note.type] || typeConfig.note;
@@ -117,6 +122,14 @@ export default function NoteCard({ note, onEdit, onDelete }: NoteCardProps) {
             <Clock className="h-3 w-3" />
             <time dateTime={note.created_at}>{formatFormattedDate(note.created_at, language)}</time>
           </span>
+
+          {note.remind_at && (
+            <span className="flex items-center gap-1 text-[11px] font-semibold text-[#A34F45]">
+              <BellRing className="h-3 w-3" />
+              {t("notecard_remind_at")}{" "}
+              <time dateTime={note.remind_at}>{formatFormattedDate(note.remind_at, language)}</time>
+            </span>
+          )}
         </div>
 
         <DropdownButton onEdit={() => onEdit(note)} onDelete={() => onDelete(note.id)} />
