@@ -1,0 +1,123 @@
+@import url('https://fonts.googleapis.com/css2?family=Chonburi&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+:root {
+  /* ─────────────────────────────
+     Surface / Background
+     ───────────────────────────── */
+  --bg: #F0EFEB;       /* พื้นหลังหลัก */
+  --page: #FAF9F6;     /* card / paper */
+  --paper: #E6E3DC;    /* surface รอง */
+  --desk: #D8D5CC;     /* background ชั้นนอก */
+  --rule: #D1CEC5;     /* divider / เส้นคั่น */
+
+  /* ─────────────────────────────
+     Text / Icons
+     ───────────────────────────── */
+  --ink: #26343F;        /* ตัวหนังสือหลัก */
+  --ink-muted: #66737D;  /* ตัวหนังสือรอง */
+  --ink-faint: #9AA4AA;  /* icon / placeholder / disabled */
+
+  /* ─────────────────────────────
+     Brand Primary & Accents
+     ───────────────────────────── */
+  --marker: #3D5A73;       /* primary */
+  --marker-dark: #30475C;  /* hover / pressed */
+  --marker-soft: rgba(61, 90, 115, 0.12); /* selected / highlight */
+  --pine: var(--marker);
+  --pine-soft: rgba(61, 90, 115, 0.08);
+  --checklist: #D8B968;
+  --danger: #A34F45;
+  --success: #2E7D32;
+
+  --primary: var(--marker);
+  --primary-foreground: #FAF9F6;
+  --secondary: var(--paper);
+  --secondary-foreground: var(--ink);
+
+  /* Typography */
+  --font-display: 'Chonburi', cursive, sans-serif;
+  --font-body: 'IBM Plex Sans Thai', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+body {
+  background-color: #f0efeb;
+
+  background-image:
+    linear-gradient(
+      to right,
+      transparent 47px,
+      rgba(163, 79, 69, 0.12) 48px,
+      transparent 49px
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 31px,
+      rgba(61, 90, 115, 0.08) 35px
+    );
+
+  background-size: 100% 100%, 100% 38px;
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+
+/* Base Headings - Crisp & Modern Thai Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-body);
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* Papercraft Utility Classes */
+.paper-card {
+  background-color: #FAF9F6;
+  border: 1px solid #D1CEC5;
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px rgba(38, 52, 63, 0.05), 0 1px 2px rgba(38, 52, 63, 0.03);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.paper-card-hover:hover {
+  border-color: #3D5A73;
+  box-shadow: 0 6px 16px -2px rgba(61, 90, 115, 0.12), 0 2px 6px -1px rgba(38, 52, 63, 0.06);
+  transform: translateY(-1px);
+}
+
+/* Custom subtle scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D1CEC5;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9AA4AA;
+}
+
+/* Toast Notification Styles */
+.jodjod-toast {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.jodjod-toast[data-starting-style] {
+  opacity: 0;
+  transform: translateY(16px) scale(0.96);
+}
+
+.jodjod-toast[data-ending-style] {
+  opacity: 0;
+  transform: translateY(16px) scale(0.96);
+}
