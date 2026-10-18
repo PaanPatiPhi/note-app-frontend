@@ -41,6 +41,7 @@ app/
   login/page.tsx      Login + Register (tabs): email/password, Google, LINE (LIFF)
   register/page.tsx   แค่ render <LoginPage defaultTab="register" />
   notes/page.tsx      หน้าหลัก: feed โน้ต, สร้าง/แก้/ลบ, ค้นหา, กรองตาม type
+  chat/page.tsx       แชทกับ AI เต็มหน้า: ประวัติจาก LINE + เว็บ, โหลดข้อความเก่า, ปุ่มยกเลิก
   edit/[id]/page.tsx  หน้าแก้ไขโน้ตแบบเต็มหน้า (params เป็น Promise)
   account/page.tsx    โปรไฟล์, อัปโหลด avatar, ใช้รูปจาก LINE, link/unlink Google & LINE
   subscription/page.tsx  แพ็กเกจ Free/Premium, สมัคร (PromptPay/บัตร — mock), ยกเลิก, ประวัติ
@@ -53,9 +54,11 @@ lib/
   language-context.tsx LanguageProvider / useLanguage() → t(key)
   translations.ts     คำแปล th / en
   utils.ts            cn()
+  use-assistant-chat.ts  hook รวม logic แชท AI (ส่ง, ยกเลิก, โหลดประวัติ) ใช้ทั้ง AssistantBox และหน้า /chat
 components/
   Navbar.tsx          Navbar หลักที่ทุกหน้าใช้ (shared/NavBar.tsx ไม่ได้ถูกใช้)
-  AssistantBox.tsx    กล่องแชท "บอก JodJod" บนหน้า notes: ส่งข้อความให้ AI + ปุ่มยกเลิก
+  AssistantBox.tsx    กล่องแชท "บอก JodJod" แบบย่อบนหน้า notes (5 ข้อความล่าสุด + ลิงก์ไป /chat)
+  chat/ChatExchange.tsx  bubble หนึ่งรอบ (ข้อความผู้ใช้ + คำตอบ AI + ปุ่มยกเลิก) ใช้ร่วมกัน
   NoteCard.tsx        การ์ดโน้ต + toggle item ของ checklist + เวลาเตือนของ reminder
   ToggleBar.tsx       ตัวกรอง type (all / note / checklist)
   UserCard.tsx, LanguageToggle.tsx, Loading.tsx (Lottie), spiral.tsx
@@ -106,7 +109,7 @@ components/
 |---|---|
 | Auth | `POST /api/auth/{register,login,google,line,logout}`, `GET /api/auth/me`, `POST /api/auth/link/{google,line}`, `POST /api/auth/unlink/{google,line}`, `POST /api/auth/avatar` (multipart field `avatar`), `PATCH /api/auth/profile` |
 | Profile/Notes | `GET /api/profile`, `GET /api/notes/count`, `GET/POST /api/notes`, `GET/PATCH/DELETE /api/notes/:id`, `PATCH /api/notes/:id/items/:itemId` |
-| AI Assistant | `POST /api/assistant/messages` (`{text}`), `POST /api/assistant/actions/:id/undo` |
+| AI Assistant | `POST /api/assistant/messages` (`{text}`), `POST /api/assistant/actions/:id/undo`, `GET /api/assistant/history?limit&before` (เก่า→ใหม่, `next_before` สำหรับหน้าก่อนหน้า) |
 | Feedback | `GET/POST /api/feedback` |
 | Subscription | `POST /api/subscription/{subscribe,cancel}`, `GET /api/subscription/{current,history}` |
 | Admin | `GET /api/admin/{stats,feedbacks,users,subscriptions}`, `PATCH /api/admin/feedbacks/:id/status`, `PATCH /api/admin/users/:id/{tier,role}` |

@@ -13,6 +13,7 @@ import type {
   UserRole,
   AssistantReply,
   AssistantUndoResult,
+  AssistantHistoryPage,
 } from "./types";
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8080";
@@ -331,6 +332,16 @@ export async function undoAssistantAction(actionId: string): Promise<AssistantUn
   return await request<AssistantUndoResult>(`/api/assistant/actions/${encodeURIComponent(actionId)}/undo`, {
     method: "POST",
   });
+}
+
+// ประวัติที่สั่ง AI ทั้งจาก LINE และเว็บ (เรียงเก่า→ใหม่) — ส่ง before เพื่อโหลดหน้าที่เก่ากว่า
+export async function getAssistantHistory(options?: { limit?: number; before?: string | null }): Promise<AssistantHistoryPage> {
+  const params = new URLSearchParams();
+  if (options?.limit) params.set("limit", String(options.limit));
+  if (options?.before) params.set("before", options.before);
+  const qs = params.toString();
+  const data = await request<AssistantHistoryPage>(`/api/assistant/history${qs ? `?${qs}` : ""}`);
+  return { items: data.items ?? [], next_before: data.next_before ?? null };
 }
 
 // ──────────────────────────────────────────────

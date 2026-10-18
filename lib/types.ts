@@ -80,6 +80,23 @@ export type AssistantUndoResult = {
   restored_items: number;
 };
 
+// ข้อความที่เคยสั่ง AI (จาก LINE หรือเว็บ) — GET /api/assistant/history
+export type AssistantHistoryItem = {
+  id: string;
+  text: string;
+  reply: string;
+  channel: "line" | "web";
+  created_at: string;
+  undone_at?: string | null;
+  undoable: boolean;
+};
+
+export type AssistantHistoryPage = {
+  items: AssistantHistoryItem[];
+  // ส่งเป็น before เพื่อโหลดหน้าที่เก่ากว่า; null = หมดแล้ว
+  next_before: string | null;
+};
+
 export type FeedbackType = "complaint" | "suggestion" | "bug" | "other";
 
 export type FeedbackStatus = "pending" | "investigating" | "resolved" | "dismissed";

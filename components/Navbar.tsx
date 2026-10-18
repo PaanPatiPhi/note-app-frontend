@@ -7,7 +7,7 @@ import { useLanguage } from "@/lib/language-context";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { getAvatarUrl } from "@/lib/api";
 import { toast } from "@/components/ui/toast";
-import { LogOut, BookOpen, LogIn, Edit3, MessageSquareHeart, Crown, ShieldCheck } from "lucide-react";
+import { LogOut, BookOpen, LogIn, Edit3, MessageSquareHeart, MessagesSquare, Crown, ShieldCheck } from "lucide-react";
 
 export function Navbar() {
   const pathname = usePathname();
@@ -48,6 +48,18 @@ export function Navbar() {
               >
                 <BookOpen className="h-4 w-4" />
                 <span>{t("nav_notes")}</span>
+              </Link>
+
+              <Link
+                href="/chat"
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+                  pathname === "/chat"
+                    ? "bg-[#3D5A73] text-white shadow-xs"
+                    : "text-[#66737D] hover:bg-[#E6E3DC]/60 hover:text-[#26343F]"
+                }`}
+              >
+                <MessagesSquare className="h-4 w-4" />
+                <span className="hidden sm:inline">{t("nav_chat")}</span>
               </Link>
 
               <Link
