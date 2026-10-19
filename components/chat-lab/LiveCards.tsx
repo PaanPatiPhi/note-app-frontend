@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { BellRing, Check, ListChecks, StickyNote } from "lucide-react";
-import { getFeed, toggleItem } from "@/lib/api";
+import { BellRing, Check, ListChecks, Pin, StickyNote } from "lucide-react";
+import { getFeed, toggleItem, updateNote } from "@/lib/api";
 import { useLanguage } from "@/lib/language-context";
 import type { Note } from "@/lib/types";
 
@@ -115,6 +115,17 @@ export function LiveCards({ version, onCount }: LiveCardsProps) {
     refresh();
   };
 
+  const onPin = async (note: Note) => {
+    const pinned = !note.pinned;
+    setNotes((list) => list?.map((n) => (n.id === note.id ? { ...n, pinned } : n)) ?? null);
+    try {
+      await updateNote(note.id, { pinned });
+    } catch (err) {
+      console.error("Pin note error:", err);
+    }
+    refresh();
+  };
+
   if (notes === null) {
     return <div className="p-6 text-xs text-[#9AA4AA]">{t("common_loading")}</div>;
   }
@@ -160,7 +171,7 @@ export function LiveCards({ version, onCount }: LiveCardsProps) {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.96 }}
                     transition={{ duration: 0.25 }}
-                    className={`relative rounded-2xl bg-white p-3.5 shadow-[0_1px_3px_rgba(38,52,63,0.08)] ring-1 transition-[box-shadow,ring-color] duration-700 ${
+                    className={`group relative rounded-2xl bg-white p-3.5 pr-9 shadow-[0_1px_3px_rgba(38,52,63,0.08)] ring-1 transition-[box-shadow,ring-color] duration-700 ${
                       marks[n.id] ? "ring-2 ring-[#D8B968]" : "ring-[#E6E3DC]"
                     }`}
                   >
@@ -169,6 +180,19 @@ export function LiveCards({ version, onCount }: LiveCardsProps) {
                         {marks[n.id] === "new" ? t("lab_badge_new") : t("lab_badge_updated")}
                       </span>
                     )}
+
+                    <button
+                      type="button"
+                      onClick={() => onPin(n)}
+                      aria-pressed={!!n.pinned}
+                      aria-label={n.pinned ? t("lab_unpin") : t("lab_pin")}
+                      title={n.pinned ? t("lab_unpin") : t("lab_pin")}
+                      className={`absolute right-2 top-2 rounded-full p-1.5 transition-opacity cursor-pointer hover:bg-[#F0EFEB] focus-visible:opacity-100 ${
+                        n.pinned ? "text-[#A34F45]" : "text-[#9AA4AA] opacity-60 sm:opacity-0 sm:group-hover:opacity-100"
+                      }`}
+                    >
+                      <Pin className="h-3.5 w-3.5" fill={n.pinned ? "currentColor" : "none"} />
+                    </button>
 
                     {n.type === "reminder" && n.remind_at && (
                       <p className="mb-1 text-[11px] font-semibold text-[#A34F45]">{formatWhen(n.remind_at, language)}</p>

@@ -292,7 +292,7 @@ export async function getNoteById(id: string): Promise<Note> {
 
 export async function updateNote(
   id: string,
-  fields: { content?: string; is_done?: boolean }
+  fields: { content?: string; is_done?: boolean; pinned?: boolean }
 ): Promise<void> {
   await request<void>(`/api/notes/${id}`, {
     method: "PATCH",

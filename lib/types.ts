@@ -61,6 +61,8 @@ export type Note = {
   remind_at?: string | null;
   // ช่องทางที่สร้าง: "line" | "web" | "ai"
   source?: string;
+  // ปักหมุดไว้ (แสดงบน widget iPhone)
+  pinned?: boolean;
 };
 
 // ผลจาก AI assistant (POST /api/assistant/messages)
