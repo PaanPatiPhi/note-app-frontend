@@ -3,10 +3,10 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import liff from "@line/liff";
-import { BellRing, CalendarDays, CalendarX2, CheckCircle2, Circle, Crown, ExternalLink, ListChecks, StickyNote } from "lucide-react";
+import { BellRing, CalendarDays, CalendarX2, CheckCircle2, Circle, Crown, ExternalLink, KeyRound, ListChecks, Mail, MessageCircle, StickyNote } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useLanguage } from "@/lib/language-context";
-import { getAgenda, getAvatarUrl, getFeed, getIntegrations, toggleItem } from "@/lib/api";
+import { ApiError, changePassword, createHandoff, getAgenda, getAvatarUrl, getFeed, getIntegrations, linkEmail, toggleItem } from "@/lib/api";
 import type { AgendaItem, AgendaResponse, IntegrationsStatus, Note } from "@/lib/types";
 import Loading from "@/components/Loading";
 
@@ -42,6 +42,31 @@ export const lineCopy = {
     notConnected: "ยังไม่ได้เชื่อม",
     openWeb: "เปิดเว็บแบบเต็ม",
     manageAccount: "จัดการบัญชี",
+    signIn: "วิธีเข้าสู่ระบบ",
+    signInHint: "เพิ่มหลายวิธีไว้ จะได้เข้าใช้บนเว็บหรือ widget บน iPhone ได้โดยไม่ต้องผ่าน LINE",
+    line: "LINE",
+    google: "Google",
+    email: "อีเมลและรหัสผ่าน",
+    linkCta: "เชื่อม",
+    unlinkCta: "ยกเลิก",
+    unlinkConfirm: "ยกเลิกการเชื่อม Google? ยังเข้าใช้ด้วย LINE ได้ตามเดิม",
+    emailUnset: "ยังไม่ได้ตั้ง",
+    emailSet: "ตั้งค่า",
+    passwordChange: "เปลี่ยนรหัสผ่าน",
+    emailLabel: "อีเมล",
+    passwordLabel: "รหัสผ่าน (อย่างน้อย 6 ตัว)",
+    passwordConfirm: "ยืนยันรหัสผ่าน",
+    currentPassword: "รหัสผ่านเดิม",
+    newPassword: "รหัสผ่านใหม่ (อย่างน้อย 6 ตัว)",
+    save: "บันทึก",
+    saving: "กำลังบันทึก...",
+    cancel: "ยกเลิก",
+    passwordMismatch: "รหัสผ่านทั้งสองช่องไม่ตรงกัน",
+    passwordShort: "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร",
+    emailSaved: "ตั้งอีเมลและรหัสผ่านแล้ว ใช้เข้าสู่ระบบบนเว็บและ widget ได้เลย",
+    passwordSaved: "เปลี่ยนรหัสผ่านแล้ว",
+    failed: "ทำรายการไม่สำเร็จ ลองใหม่อีกครั้ง",
+    googleFromEmail: "ใช้อีเมลเดียวกับ Google ที่เชื่อมไว้",
   },
   en: {
     tabs: { agenda: "Upcoming", lists: "Lists", notes: "Notes", account: "Account" },
@@ -73,6 +98,31 @@ export const lineCopy = {
     notConnected: "Not connected",
     openWeb: "Open full website",
     manageAccount: "Manage account",
+    signIn: "Sign-in methods",
+    signInHint: "Add more ways to sign in so you can use the website or the iPhone widget without LINE",
+    line: "LINE",
+    google: "Google",
+    email: "Email and password",
+    linkCta: "Connect",
+    unlinkCta: "Remove",
+    unlinkConfirm: "Disconnect Google? You can still sign in with LINE.",
+    emailUnset: "Not set",
+    emailSet: "Set up",
+    passwordChange: "Change password",
+    emailLabel: "Email",
+    passwordLabel: "Password (at least 6 characters)",
+    passwordConfirm: "Confirm password",
+    currentPassword: "Current password",
+    newPassword: "New password (at least 6 characters)",
+    save: "Save",
+    saving: "Saving...",
+    cancel: "Cancel",
+    passwordMismatch: "The passwords don't match",
+    passwordShort: "Use at least 6 characters",
+    emailSaved: "Email and password set. You can sign in on the web and in the widget now.",
+    passwordSaved: "Password changed",
+    failed: "Something went wrong. Please try again.",
+    googleFromEmail: "Uses the same email as your connected Google account",
   },
 };
 export type LineCopy = (typeof lineCopy)["th"];
@@ -89,6 +139,17 @@ export function openOutside(path: string) {
     // liff ยังไม่ได้ init (เปิดจาก browser ปกติ)
   }
   window.location.href = url;
+}
+
+// เหมือน openOutside แต่พา session ไปด้วย: browser ภายนอกไม่มี session ของหน้า LIFF
+// จึงขอรหัสใช้ครั้งเดียวแล้วเปิด /handoff ให้แลกเป็น session ก่อนไปหน้าที่ต้องการ
+export async function openOutsideSignedIn(path: string) {
+  try {
+    const { code } = await createHandoff();
+    openOutside(`/handoff?code=${encodeURIComponent(code)}&next=${encodeURIComponent(path)}`);
+  } catch {
+    openOutside(path); // ขอรหัสไม่ได้: เปิดหน้าเดิม ผู้ใช้ login เองได้
+  }
 }
 
 function useLoad<T>(load: () => Promise<T>) {
@@ -322,11 +383,23 @@ export function NotesTab({ c }: { c: LineCopy }) {
 // ── บัญชีและแพ็กเกจ ─────────────────────────────────────────────
 
 export function AccountTab({ c }: { c: LineCopy }) {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const load = useCallback(() => getIntegrations(), []);
-  const { data } = useLoad<IntegrationsStatus>(load);
+  const { data, reload } = useLoad<IntegrationsStatus>(load);
   const premium = user?.tier === "premium";
   const cal = data?.google_calendar;
+
+  // เชื่อม Google/ปฏิทินเสร็จใน browser ภายนอกแล้วกลับมา LINE → โหลดสถานะใหม่
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        refreshUser();
+        reload();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [refreshUser, reload]);
 
   return (
     <div className="space-y-4">
@@ -370,21 +443,277 @@ export function AccountTab({ c }: { c: LineCopy }) {
             <p className="truncate text-xs text-[#66737D]">{cal?.connected ? `${c.connected}${cal.email ? ` · ${cal.email}` : ""}` : c.notConnected}</p>
           </div>
           {cal && !cal.connected && cal.available && (
-            <button type="button" onClick={() => openOutside("/account")} className="rounded-full bg-[#3D5A73] px-3 py-1.5 text-xs font-semibold text-white cursor-pointer">
+            <button type="button" onClick={() => openOutsideSignedIn("/account")} className="rounded-full bg-[#3D5A73] px-3 py-1.5 text-xs font-semibold text-white cursor-pointer">
               {c.calConnectCta}
             </button>
           )}
         </div>
       </section>
 
+      <SignInMethods c={c} />
+
       <div className="flex gap-2">
-        <button type="button" onClick={() => openOutside("/chat")} className="flex-1 rounded-full border border-[#D1CEC5] bg-white py-2.5 text-sm font-semibold text-[#26343F] cursor-pointer">
+        <button type="button" onClick={() => openOutsideSignedIn("/chat")} className="flex-1 rounded-full border border-[#D1CEC5] bg-white py-2.5 text-sm font-semibold text-[#26343F] cursor-pointer">
           {c.openWeb}
         </button>
-        <button type="button" onClick={() => openOutside("/account")} className="flex-1 rounded-full border border-[#D1CEC5] bg-white py-2.5 text-sm font-semibold text-[#26343F] cursor-pointer">
+        <button type="button" onClick={() => openOutsideSignedIn("/account")} className="flex-1 rounded-full border border-[#D1CEC5] bg-white py-2.5 text-sm font-semibold text-[#26343F] cursor-pointer">
           {c.manageAccount}
         </button>
       </div>
     </div>
+  );
+}
+
+// ── วิธีเข้าสู่ระบบ (LINE / Google / อีเมล) ─────────────────────
+
+const inputClass =
+  "w-full rounded-xl border border-[#D1CEC5] bg-[#FAF9F6] px-3 py-2.5 text-sm text-[#26343F] outline-none focus:border-[#3D5A73] read-only:text-[#66737D]";
+
+function errorText(err: unknown, c: LineCopy) {
+  return err instanceof ApiError && err.message ? err.message : c.failed;
+}
+
+function MethodRow({
+  icon,
+  title,
+  detail,
+  connected,
+  action,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  detail: string;
+  connected: boolean;
+  action?: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center gap-3 py-2.5">
+      {icon}
+      <div className="min-w-0 flex-1">
+        <p className="flex items-center gap-1.5 font-semibold text-[#26343F]">
+          {title}
+          {connected ? <CheckCircle2 className="h-3.5 w-3.5 text-[#2E7D32]" /> : <Circle className="h-3.5 w-3.5 text-[#9AA4AA]" />}
+        </p>
+        <p className="truncate text-xs text-[#66737D]">{detail}</p>
+      </div>
+      {action}
+    </div>
+  );
+}
+
+function SignInMethods({ c }: { c: LineCopy }) {
+  const { user, identities, unlinkGoogleAccount, refreshUser } = useAuth();
+  const line = identities.find((i) => i.provider === "line");
+  const google = identities.find((i) => i.provider === "google");
+  const email = identities.find((i) => i.provider === "email");
+  const [form, setForm] = useState<"none" | "email" | "password">("none");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+
+  const onUnlinkGoogle = async () => {
+    if (!confirm(c.unlinkConfirm)) return;
+    setBusy(true);
+    setError("");
+    try {
+      await unlinkGoogleAccount();
+    } catch (err) {
+      setError(errorText(err, c));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const open = (f: "email" | "password") => {
+    setForm(form === f ? "none" : f);
+    setError("");
+    setNotice("");
+  };
+
+  const pill = "rounded-full px-3 py-1.5 text-xs font-semibold cursor-pointer disabled:opacity-50";
+
+  return (
+    <section className="rounded-2xl bg-white p-4 ring-1 ring-[#E6E3DC]">
+      <p className="text-xs font-bold uppercase tracking-wide text-[#66737D]">{c.signIn}</p>
+      <p className="mt-1 text-xs text-[#9AA4AA]">{c.signInHint}</p>
+
+      <div className="mt-1 divide-y divide-[#F0EFEB]">
+        <MethodRow
+          icon={<span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#06C755]/10 text-[#06C755]"><MessageCircle className="h-5 w-5" /></span>}
+          title={c.line}
+          detail={line ? `${c.connected}${line.display_name ? ` · ${line.display_name}` : ""}` : c.notConnected}
+          connected={!!line}
+        />
+        <MethodRow
+          icon={<span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#4285F4]/10 text-base font-bold text-[#4285F4]">G</span>}
+          title={c.google}
+          detail={google ? `${c.connected}${google.email ? ` · ${google.email}` : ""}` : c.notConnected}
+          connected={!!google}
+          action={
+            google ? (
+              <button type="button" disabled={busy} onClick={onUnlinkGoogle} className={`${pill} border border-[#D1CEC5] text-[#A34F45]`}>
+                {c.unlinkCta}
+              </button>
+            ) : (
+              <button type="button" onClick={() => openOutsideSignedIn("/account")} className={`${pill} bg-[#3D5A73] text-white`}>
+                {c.linkCta}
+              </button>
+            )
+          }
+        />
+        <MethodRow
+          icon={<span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#3D5A73]/10 text-[#3D5A73]"><Mail className="h-5 w-5" /></span>}
+          title={c.email}
+          detail={email ? email.email || user?.email || c.connected : c.emailUnset}
+          connected={!!email}
+          action={
+            <button
+              type="button"
+              onClick={() => open(email ? "password" : "email")}
+              className={`${pill} ${email ? "border border-[#D1CEC5] text-[#26343F]" : "bg-[#3D5A73] text-white"}`}
+            >
+              {email ? <KeyRound className="h-3.5 w-3.5" aria-label={c.passwordChange} /> : c.emailSet}
+            </button>
+          }
+        />
+      </div>
+
+      {form === "email" && (
+        <EmailForm
+          c={c}
+          fixedEmail={user?.email || ""}
+          busy={busy}
+          setBusy={setBusy}
+          onError={setError}
+          onDone={async () => {
+            await refreshUser();
+            setForm("none");
+            setNotice(c.emailSaved);
+          }}
+          onCancel={() => setForm("none")}
+        />
+      )}
+      {form === "password" && (
+        <PasswordForm
+          c={c}
+          busy={busy}
+          setBusy={setBusy}
+          onError={setError}
+          onDone={() => {
+            setForm("none");
+            setNotice(c.passwordSaved);
+          }}
+          onCancel={() => setForm("none")}
+        />
+      )}
+      {error && <p className="mt-3 text-xs font-semibold text-[#A34F45]">{error}</p>}
+      {notice && <p className="mt-3 text-xs font-semibold text-[#2E7D32]">{notice}</p>}
+    </section>
+  );
+}
+
+type FormProps = {
+  c: LineCopy;
+  busy: boolean;
+  setBusy: (b: boolean) => void;
+  onError: (msg: string) => void;
+  onDone: () => void | Promise<void>;
+  onCancel: () => void;
+};
+
+function FormButtons({ c, busy, onCancel }: { c: LineCopy; busy: boolean; onCancel: () => void }) {
+  return (
+    <div className="flex gap-2 pt-1">
+      <button type="button" onClick={onCancel} className="flex-1 rounded-full border border-[#D1CEC5] py-2.5 text-sm font-semibold text-[#26343F] cursor-pointer">
+        {c.cancel}
+      </button>
+      <button type="submit" disabled={busy} className="flex-1 rounded-full bg-[#26343F] py-2.5 text-sm font-semibold text-white cursor-pointer disabled:opacity-50">
+        {busy ? c.saving : c.save}
+      </button>
+    </div>
+  );
+}
+
+// ตั้งอีเมล+รหัสผ่านให้บัญชี LINE — ถ้ามีอีเมลจาก Google อยู่แล้วต้องใช้อีเมลนั้น (ล็อกช่องไว้)
+function EmailForm({ c, fixedEmail, busy, setBusy, onError, onDone, onCancel }: FormProps & { fixedEmail: string }) {
+  const [emailValue, setEmailValue] = useState(fixedEmail);
+  const [password, setPassword] = useState("");
+  const [confirmValue, setConfirmValue] = useState("");
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password.length < 6) return onError(c.passwordShort);
+    if (password !== confirmValue) return onError(c.passwordMismatch);
+    onError("");
+    setBusy(true);
+    try {
+      await linkEmail(emailValue.trim(), password);
+      await onDone();
+    } catch (err) {
+      onError(errorText(err, c));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <form onSubmit={submit} className="mt-3 space-y-2 rounded-xl bg-[#F0EFEB] p-3">
+      <label className="block text-xs font-semibold text-[#66737D]">
+        {c.emailLabel}
+        <input
+          type="email"
+          required
+          autoComplete="email"
+          value={emailValue}
+          readOnly={!!fixedEmail}
+          onChange={(e) => setEmailValue(e.target.value)}
+          className={`mt-1 ${inputClass}`}
+        />
+        {fixedEmail && <span className="mt-1 block font-normal text-[#9AA4AA]">{c.googleFromEmail}</span>}
+      </label>
+      <label className="block text-xs font-semibold text-[#66737D]">
+        {c.passwordLabel}
+        <input type="password" required autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className={`mt-1 ${inputClass}`} />
+      </label>
+      <label className="block text-xs font-semibold text-[#66737D]">
+        {c.passwordConfirm}
+        <input type="password" required autoComplete="new-password" value={confirmValue} onChange={(e) => setConfirmValue(e.target.value)} className={`mt-1 ${inputClass}`} />
+      </label>
+      <FormButtons c={c} busy={busy} onCancel={onCancel} />
+    </form>
+  );
+}
+
+function PasswordForm({ c, busy, setBusy, onError, onDone, onCancel }: FormProps) {
+  const [current, setCurrent] = useState("");
+  const [next, setNext] = useState("");
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (next.length < 6) return onError(c.passwordShort);
+    onError("");
+    setBusy(true);
+    try {
+      await changePassword(current, next);
+      await onDone();
+    } catch (err) {
+      onError(errorText(err, c));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <form onSubmit={submit} className="mt-3 space-y-2 rounded-xl bg-[#F0EFEB] p-3">
+      <label className="block text-xs font-semibold text-[#66737D]">
+        {c.currentPassword}
+        <input type="password" required autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} className={`mt-1 ${inputClass}`} />
+      </label>
+      <label className="block text-xs font-semibold text-[#66737D]">
+        {c.newPassword}
+        <input type="password" required autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} className={`mt-1 ${inputClass}`} />
+      </label>
+      <FormButtons c={c} busy={busy} onCancel={onCancel} />
+    </form>
   );
 }

@@ -192,6 +192,37 @@ export async function unlinkLine(): Promise<{ success: boolean; message: string;
   });
 }
 
+// เพิ่ม login ด้วยอีเมล+รหัสผ่านให้บัญชีที่ใช้ LINE/Google อยู่ (บัญชีที่มีอีเมลจาก Google ต้องใช้อีเมลนั้น)
+export async function linkEmail(email: string, password: string): Promise<{ success: boolean; message: string; user: User; identities: UserIdentity[] }> {
+  return await request<{ success: boolean; message: string; user: User; identities: UserIdentity[] }>("/api/auth/link/email", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  });
+}
+
+export async function changePassword(currentPassword: string, newPassword: string): Promise<{ success: boolean; message: string }> {
+  return await request<{ success: boolean; message: string }>("/api/auth/password", {
+    method: "POST",
+    body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+  });
+}
+
+// รหัสใช้ครั้งเดียว (อายุ 2 นาที) ไว้เปิดเว็บใน browser ภายนอกจากหน้า LIFF โดยยัง login อยู่
+export async function createHandoff(): Promise<{ code: string; expires_in: number }> {
+  return await request<{ code: string; expires_in: number }>("/api/auth/handoff", { method: "POST" });
+}
+
+export async function exchangeHandoff(code: string): Promise<AuthResponse> {
+  const data = await request<AuthResponse>("/api/auth/handoff/exchange", {
+    method: "POST",
+    body: JSON.stringify({ code }),
+  });
+  if (data.token) {
+    setAuthToken(data.token);
+  }
+  return data;
+}
+
 export async function logout(): Promise<void> {
   try {
     await request<void>("/api/auth/logout", { method: "POST" });
